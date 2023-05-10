@@ -1,4 +1,4 @@
-package com.example.androidgamedevelopment;
+package com.example.androidgamedevelopment.objects;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -11,6 +11,8 @@ public abstract class Circle  extends GameObject{
 
     protected double radius;
     protected Paint paint;
+    double velocityX;
+    double velocityY;
 
     public Circle(Context context, int color, double positionX, double positionY, double radius) {
         super(positionX, positionY);
@@ -20,7 +22,7 @@ public abstract class Circle  extends GameObject{
         paint = new Paint();
         paint.setColor(color);
     }
-
+@Override
     public void draw(Canvas canvas) {
         canvas.drawCircle((float)positionX, (float)positionY, (float)radius, paint);
     }
