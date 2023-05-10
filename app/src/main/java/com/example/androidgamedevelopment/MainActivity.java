@@ -15,13 +15,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //set window to full screen (will hide the status bar)
-        getSupportActionBar().hide();
-        Window window = getWindow();
-        window.setFlags(
-                WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN
-        );
         //Set Content View to game, so that object in the game class can be rendered
         setContentView(new Game(this));
     }
