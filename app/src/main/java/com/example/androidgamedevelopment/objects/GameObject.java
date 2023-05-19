@@ -16,7 +16,7 @@ public abstract class GameObject {
         this.positionY = positionY;
     }
 
-    protected static double getDistanceBetweenObject(Enemy obj1, Player obj2) {
+    protected static double getDistanceBetweenObject(GameObject obj1, GameObject obj2) {
         return Math.sqrt(Math.pow(obj1.getPositionX() - obj2.getPositionX(), 2) +
                 Math.pow(obj1.getPositionY()-obj2.getPositionY(), 2));
     }
