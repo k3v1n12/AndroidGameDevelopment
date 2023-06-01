@@ -1,18 +1,28 @@
 package com.example.androidgamedevelopment;
 
+import android.app.Activity;
 import android.content.Context;
+import android.graphics.Rect;
+import android.util.DisplayMetrics;
+import android.util.Log;
 import android.graphics.Canvas;
-import android.graphics.Paint;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
 
-import com.example.androidgamedevelopment.objects.Circle;
-import com.example.androidgamedevelopment.objects.Enemy;
-import com.example.androidgamedevelopment.objects.Player;
+import com.example.androidgamedevelopment.gameobject.Circle;
+import com.example.androidgamedevelopment.gameobject.Enemy;
+import com.example.androidgamedevelopment.gameobject.Player;
+import com.example.androidgamedevelopment.gameobject.Spell;
+import com.example.androidgamedevelopment.gamepanel.JoyStick;
+import com.example.androidgamedevelopment.gamepanel.GameOver;
+import com.example.androidgamedevelopment.gamepanel.Performance;
+import com.example.androidgamedevelopment.graphics.Animator;
+import com.example.androidgamedevelopment.graphics.Sprite;
+import com.example.androidgamedevelopment.graphics.SpriteSheet;
+import com.example.androidgamedevelopment.map.TileMap;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -24,10 +34,17 @@ import java.util.List;
  */
 
 public class Game extends SurfaceView implements SurfaceHolder.Callback {
+    private final TileMap tilemap;
+    private int joystickPointerId = 0;
     private final Player player;
     private final JoyStick joyStick;
     private GameLoop gameLoop;
-    private List<Enemy> enemyList = new ArrayList<Enemy>();
+    private List<Enemy> enemyList = new ArrayList<>();
+    private List<Spell>spellList = new ArrayList<>();
+ 	private int numberOfSpellsToCast = 0;
+    private GameOver gameOver;
+    private Performance performance;
+    private GameDisplay gameDisplay;
 
     public Game(Context context) {
         super(context);
@@ -36,15 +53,29 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         surfaceHolder.addCallback(this);
 
         gameLoop = new GameLoop(this, surfaceHolder);
-
+        // Initialize game panels
+        performance = new Performance(context, gameLoop);
+        gameOver = new GameOver(context);
         //initialise joystick
         joyStick = new JoyStick(275, 800, 90 ,60);
 
         //initialise new player
-        player = new Player(getContext(), joyStick, 500, 500, 30);
+        SpriteSheet spriteSheet = new SpriteSheet(context);
 
-        //initialise enemy
-        //enemy = new Enemy(getContext(), player, 200, 300, 30);
+        Sprite[] spriteArray = new Sprite[3];
+        spriteArray[0] = new Sprite(spriteSheet, new Rect(0*64, 0, 1*64, 64));
+        spriteArray[1] = new Sprite(spriteSheet, new Rect(1*64, 0, 2*64, 64));
+        spriteArray[2] = new Sprite(spriteSheet, new Rect(2*64, 0, 3*64, 64));
+        Animator animator = new Animator(spriteArray);
+        player = new Player(context, joyStick, 2*500, 500, 32, animator);
+
+
+        // Initialize display and center it around the player
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        ((Activity) getContext()).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        gameDisplay = new GameDisplay(displayMetrics.widthPixels, displayMetrics.heightPixels, player);
+        // Initialize Tilemap
+        tilemap = new TileMap(spriteSheet);
         setFocusable(true);
     }
 
@@ -52,88 +83,136 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     public boolean onTouchEvent(MotionEvent event) {
 
         //handle touch event action
-        switch(event.getAction()) {
+        switch(event.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
-                if(joyStick.isPressed((double)event.getX(), (double)event.getY())) {
+            case MotionEvent.ACTION_POINTER_DOWN:
+                if (joyStick.getIsPressed()) {
+                    // Joystick was pressed before this event -> cast spell
+                    numberOfSpellsToCast ++;
+                } else if (joyStick.isPressed((double) event.getX(), (double) event.getY())) {
+                    // Joystick is pressed in this event -> setIsPressed(true) and store pointer id
+                    joystickPointerId = event.getPointerId(event.getActionIndex());
                     joyStick.setIsPressed(true);
+                } else {
+                    // Joystick was not previously, and is not pressed in this event -> cast spell
+                    numberOfSpellsToCast ++;
                 }
                 return true;
             case MotionEvent.ACTION_MOVE:
-                if(joyStick.getPressed()) {
-                    joyStick.setActuator((double)event.getX(), (double)event.getY());
+                if (joyStick.getIsPressed()) {
+                    // Joystick was pressed previously and is now moved
+                    joyStick.setActuator((double) event.getX(), (double) event.getY());
                 }
                 return true;
+
             case MotionEvent.ACTION_UP:
-                joyStick.setIsPressed(false);
-                joyStick.resetActuator();
+            case MotionEvent.ACTION_POINTER_UP:
+                if (joystickPointerId == event.getPointerId(event.getActionIndex())) {
+                    // joystick pointer was let go off -> setIsPressed(false) and resetActuator()
+                    joyStick.setIsPressed(false);
+                    joyStick.resetActuator();
+                }
                 return true;
         }
         return super.onTouchEvent(event);
     }
 
     @Override
-    public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {gameLoop.startLoop();
-
+    public void surfaceCreated(@NonNull SurfaceHolder surfaceHolder) {
+        Log.d("Game.java", "surfaceCreated()");
+        if (gameLoop.getState().equals(Thread.State.TERMINATED)) {
+            gameLoop = new GameLoop(this, surfaceHolder);
+        }
+        gameLoop.startLoop();
     }
 
     @Override
     public void surfaceChanged(@NonNull SurfaceHolder surfaceHolder, int i, int i1, int i2) {
-
+        Log.d("Game.java", "surfaceChanged()");
     }
 
     @Override
     public void surfaceDestroyed(@NonNull SurfaceHolder surfaceHolder) {
-
+        Log.d("Game.java", "surfaceDestroyed()");
     }
 
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
-        drawUPS(canvas);
-        drawFPS(canvas);
-
-        player.draw(canvas);
+        tilemap.draw(canvas, gameDisplay);
+        // Draw player
+        player.draw(canvas, gameDisplay);
         joyStick.draw(canvas);
         for(Enemy enemy: enemyList) {
-            enemy.draw(canvas);
+            enemy.draw(canvas, gameDisplay);
+        }
+        for(Spell spell: spellList) {
+            spell.draw(canvas, gameDisplay);
+        }
+
+        // Draw game panels
+        joyStick.draw(canvas);
+        performance.draw(canvas);
+
+        // Draw Game over if the player is dead
+        if (player.getHealthPoint() <= 0) {
+            gameOver.draw(canvas);
         }
     }
 
-    public void drawUPS(Canvas canvas) {
-        String averageUPS = Double.toString(gameLoop.getAverageUPS());
-        Paint paint = new Paint();
-        int color = ContextCompat.getColor(getContext(), R.color.magenta);
-        paint.setColor(color);
-        paint.setTextSize(50);
-        canvas.drawText("UPS: "+ averageUPS, 100, 100, paint);
-
-    }
-
-    public void drawFPS(Canvas canvas) {
-        String averageFPS = Double.toString(gameLoop.getAverageFPS());
-        Paint paint = new Paint();
-        int color = ContextCompat.getColor(getContext(), R.color.magenta);
-        paint.setColor(color);
-        paint.setTextSize(50);
-        canvas.drawText("FPS: "+ averageFPS, 100, 200, paint);
-
-    }
-
     public void update() {
+
+        // Stop updating the game if the player is dead
+        if (player.getHealthPoint() <= 0) {
+            return;
+        }
+
         player.update();
         joyStick.update();
         if(Enemy.isReadySpawn()) {
             enemyList.add(new Enemy(getContext(), player));
         }
-        for(Enemy enemy: enemyList) {
+
+        // Update states of all enemies
+        for (Enemy enemy : enemyList) {
             enemy.update();
         }
 
-        Iterator<Enemy>enemyIterator = enemyList.iterator();
-        while (enemyIterator.hasNext()) {
-            if(Circle.isColliding(enemyIterator.next(), player)) {
-                enemyIterator.remove();
+        // Update states of all spells
+        while (numberOfSpellsToCast > 0) {
+            spellList.add(new Spell(getContext(), player));
+            numberOfSpellsToCast --;
+        }
+        for (Spell spell : spellList) {
+            spell.update();
+        }
+
+        // Iterate through enemyList and Check for collision between each enemy and the player and
+        // spells in spellList.
+        Iterator<Enemy> iteratorEnemy = enemyList.iterator();
+        while (iteratorEnemy.hasNext()) {
+            Circle enemy = iteratorEnemy.next();
+            if (Circle.isColliding(enemy, player)) {
+                // Remove enemy if it collides with the player
+                iteratorEnemy.remove();
+                player.setHealthPoint(player.getHealthPoint() - 1);
+                continue;
+            }
+            Iterator<Spell>iteratorSpell = spellList.iterator();
+            while (iteratorSpell.hasNext()) {
+                Spell spell = iteratorSpell.next();
+                if(Circle.isColliding(spell, enemy)) {
+                    iteratorEnemy.remove();
+                    iteratorSpell.remove();
+                    break;
+                }
             }
         }
+        // Update gameDisplay so that it's center is set to the new center of the player's
+        // game coordinates
+        gameDisplay.update();
+    }
+    public void pause() {
+        gameLoop.stopLoop();
     }
 }

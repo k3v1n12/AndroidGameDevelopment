@@ -1,4 +1,4 @@
-package com.example.androidgamedevelopment.objects;
+package com.example.androidgamedevelopment.gameobject;
 
 import android.content.Context;
 
@@ -52,15 +52,20 @@ public class Enemy extends Circle{
         double distanceToPlayerY = player.getPositionY() - positionY;
 
         //calculate distance between enemy and player
-        double distanceToPlayer = GameObject.getDistanceBetweenObject(this, player);
+        double distanceToPlayer = GameObject.getDistanceBetweenObjects(this, player);
 
         //calculate direction from enemy to player
         double directionX = distanceToPlayerX/distanceToPlayer;
         double directionY = distanceToPlayerY/distanceToPlayer;
 
-        //set velocity in direction of player
-        velocityX = directionX * MAX_SPEED;
-        velocityY = directionY * MAX_SPEED;
+        // Set velocity in the direction to the player
+        if(distanceToPlayer > 0) { // Avoid division by zero
+            velocityX = directionX*MAX_SPEED;
+            velocityY = directionY*MAX_SPEED;
+        } else {
+            velocityX = 0;
+            velocityY = 0;
+        }
 
         positionX += velocityX;
         positionY += velocityY;

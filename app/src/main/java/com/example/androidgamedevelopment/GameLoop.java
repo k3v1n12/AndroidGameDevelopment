@@ -1,6 +1,7 @@
 package com.example.androidgamedevelopment;
 
 import android.graphics.Canvas;
+import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 
@@ -13,7 +14,7 @@ public class GameLoop extends Thread{
     private SurfaceHolder surfaceHolder;
     private Game game;
 
-    private boolean isRunning;
+    private boolean isRunning = false;
     private double averageUPS;
     private double averageFPS;
 
@@ -31,12 +32,14 @@ public class GameLoop extends Thread{
     }
 
     public void startLoop() {
+        Log.d("GameLoop.java", "startLoop()");
         isRunning = true;
         start();
     }
 
     @Override
     public void run() {
+        Log.d("GameLoop.java", "run()");
         super.run();
         //Declare time and cycle count variables
         int updateCount = 0;
@@ -98,6 +101,16 @@ public class GameLoop extends Thread{
                 frameCount = 0;
                 startTime = System.currentTimeMillis();
             }
+        }
+    }
+
+    public void stopLoop() {
+        Log.d("GameLoop.java", "stopLoop()");
+        isRunning = false;
+        try {
+            join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 }
