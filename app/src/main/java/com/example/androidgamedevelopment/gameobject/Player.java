@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 
 import androidx.core.content.ContextCompat;
 
+import com.example.androidgamedevelopment.Game;
 import com.example.androidgamedevelopment.GameDisplay;
 import com.example.androidgamedevelopment.GameLoop;
 import com.example.androidgamedevelopment.gamepanel.JoyStick;
@@ -24,15 +25,15 @@ public class Player extends Circle{
     public static final double SPEED_PIXEL_PER_SECOND = 400.0;
     private static final double MAX_SPEED = SPEED_PIXEL_PER_SECOND / GameLoop.MAX_UPS;
     public static final int MAX_HEALTH_POINTS = 5;
-    private final JoyStick joyStick;
+    private final Game game;
     private HealthBar healthBar;
     private int healthPoints = MAX_HEALTH_POINTS;
     private Animator animator;
     private PlayerState playerState;
 
-    public Player(Context context, JoyStick joyStick, double positionX, double positionY, double radius, Animator animator)  {
+    public Player(Context context, Game game, double positionX, double positionY, double radius, Animator animator)  {
         super(context, ContextCompat.getColor(context, R.color.player), positionX, positionY, radius);
-        this.joyStick = joyStick;
+        this.game = game;
         this.healthBar = new HealthBar(context, this);
         this.animator = animator;
         this.playerState = new PlayerState(this);
@@ -40,8 +41,8 @@ public class Player extends Circle{
     @Override
     public void update() {
         //update velocity based on teh actuator of the joystick
-        velocityX = joyStick.getActuatorX() * MAX_SPEED;
-        velocityY = joyStick.getActuatorY() * MAX_SPEED;
+        velocityX = game.getJoyStickActuatorX() * MAX_SPEED;
+        velocityY = game.getJoyStickActuatorY() * MAX_SPEED;
 
         //update the position
         positionX += velocityX;

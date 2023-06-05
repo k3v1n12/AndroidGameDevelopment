@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">AndroidGameDevelopment</string>
+    <string name="game_display">Display</string>
+    <string name="game_control">Control</string>
 </resources>

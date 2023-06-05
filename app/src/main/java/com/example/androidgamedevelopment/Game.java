@@ -3,6 +3,7 @@ package com.example.androidgamedevelopment;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Rect;
+import android.net.wifi.aware.DiscoverySession;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.graphics.Canvas;
@@ -28,6 +29,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import ac.robinson.bettertogether.api.messaging.BroadcastMessage;
+
 /**
  * Game manages all object in the game and is responsible for updating all states and render
  * all objects to screen
@@ -35,9 +38,7 @@ import java.util.List;
 
 public class Game extends SurfaceView implements SurfaceHolder.Callback {
     private final TileMap tilemap;
-    private int joystickPointerId = 0;
     private final Player player;
-    private final JoyStick joyStick;
     private GameLoop gameLoop;
     private List<Enemy> enemyList = new ArrayList<>();
     private List<Spell>spellList = new ArrayList<>();
@@ -45,9 +46,13 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     private GameOver gameOver;
     private Performance performance;
     private GameDisplay gameDisplay;
+    private double actuatorX = 0.0;
+    private double actuatorY = 0.0;
+    private MainActivity context;
 
     public Game(Context context) {
         super(context);
+        this.context = (MainActivity) context;
         //Get SurfaceHolder and add callback
         SurfaceHolder surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
@@ -56,8 +61,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         // Initialize game panels
         performance = new Performance(context, gameLoop);
         gameOver = new GameOver(context);
-        //initialise joystick
-        joyStick = new JoyStick(275, 800, 90 ,60);
 
         //initialise new player
         SpriteSheet spriteSheet = new SpriteSheet(context);
@@ -67,7 +70,7 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         spriteArray[1] = new Sprite(spriteSheet, new Rect(1*64, 0, 2*64, 64));
         spriteArray[2] = new Sprite(spriteSheet, new Rect(2*64, 0, 3*64, 64));
         Animator animator = new Animator(spriteArray);
-        player = new Player(context, joyStick, 2*500, 500, 32, animator);
+        player = new Player(context, this, 2*500, 500, 32, animator);
 
 
         // Initialize display and center it around the player
@@ -77,44 +80,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         // Initialize Tilemap
         tilemap = new TileMap(spriteSheet);
         setFocusable(true);
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-
-        //handle touch event action
-        switch(event.getActionMasked()) {
-            case MotionEvent.ACTION_DOWN:
-            case MotionEvent.ACTION_POINTER_DOWN:
-                if (joyStick.getIsPressed()) {
-                    // Joystick was pressed before this event -> cast spell
-                    numberOfSpellsToCast ++;
-                } else if (joyStick.isPressed((double) event.getX(), (double) event.getY())) {
-                    // Joystick is pressed in this event -> setIsPressed(true) and store pointer id
-                    joystickPointerId = event.getPointerId(event.getActionIndex());
-                    joyStick.setIsPressed(true);
-                } else {
-                    // Joystick was not previously, and is not pressed in this event -> cast spell
-                    numberOfSpellsToCast ++;
-                }
-                return true;
-            case MotionEvent.ACTION_MOVE:
-                if (joyStick.getIsPressed()) {
-                    // Joystick was pressed previously and is now moved
-                    joyStick.setActuator((double) event.getX(), (double) event.getY());
-                }
-                return true;
-
-            case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_POINTER_UP:
-                if (joystickPointerId == event.getPointerId(event.getActionIndex())) {
-                    // joystick pointer was let go off -> setIsPressed(false) and resetActuator()
-                    joyStick.setIsPressed(false);
-                    joyStick.resetActuator();
-                }
-                return true;
-        }
-        return super.onTouchEvent(event);
     }
 
     @Override
@@ -140,9 +105,10 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     public void draw(Canvas canvas) {
         super.draw(canvas);
         tilemap.draw(canvas, gameDisplay);
+        BroadcastMessage spellMessage = new BroadcastMessage(MessageType.JOYSTICK_DRAW, null);
+        context.sendMessage(spellMessage);
         // Draw player
         player.draw(canvas, gameDisplay);
-        joyStick.draw(canvas);
         for(Enemy enemy: enemyList) {
             enemy.draw(canvas, gameDisplay);
         }
@@ -151,7 +117,6 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         // Draw game panels
-        joyStick.draw(canvas);
         performance.draw(canvas);
 
         // Draw Game over if the player is dead
@@ -163,12 +128,13 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     public void update() {
 
         // Stop updating the game if the player is dead
-        if (player.getHealthPoint() <= 0) {
+       if (player.getHealthPoint() <= 0) {
             return;
         }
 
         player.update();
-        joyStick.update();
+        BroadcastMessage spellMessage = new BroadcastMessage(MessageType.JOYSTICK_UPDATE, null);
+        context.sendMessage(spellMessage);
         if(Enemy.isReadySpawn()) {
             enemyList.add(new Enemy(getContext(), player));
         }
@@ -214,5 +180,23 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     }
     public void pause() {
         gameLoop.stopLoop();
+    }
+
+    public void JoyStickCoordinates(double actuatorX, double actuatorY) {
+        this.actuatorX = actuatorX;
+        this.actuatorY = actuatorY;
+    }
+    public double getJoyStickActuatorX() {
+        return actuatorX;
+    }
+    public double getJoyStickActuatorY() {
+        return actuatorY;
+    }
+
+    public void setNumberOfSpellsToCast(int numberOfSpellsToCast) {
+        this.numberOfSpellsToCast = numberOfSpellsToCast;
+    }
+    public int getNumberofSpellsToCast() {
+        return numberOfSpellsToCast;
     }
 }

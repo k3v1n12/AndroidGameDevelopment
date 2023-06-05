@@ -17,11 +17,26 @@
             android:name=".MainActivity"
             android:exported="true"
             android:screenOrientation="landscape"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen">
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"
+            android:icon="@drawable/display"
+            android:label="@string/game_display">
             <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
+                <action android:name="ac.robinson.bettertogether.intent.action.LAUNCH_PLUGIN" />
+            </intent-filter>
 
-                <category android:name="android.intent.category.LAUNCHER" />
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
+            android:name=".ControlActivity"
+            android:exported="true"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar.FullScreen"
+            android:icon="@drawable/controller"
+            android:label="@string/game_control">
+            <intent-filter>
+                <action android:name="ac.robinson.bettertogether.intent.action.LAUNCH_PLUGIN" />
             </intent-filter>
 
             <meta-data

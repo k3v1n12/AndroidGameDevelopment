@@ -10,6 +10,13 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // required to import the Better Together API (version 1.0.3 and older)
+        jcenter() {
+            content {
+                // allow only this module, ensuring other libraries are still retrieved from current repositories
+                includeModule('ac.robinson.bettertogether', 'api')
+            }
+        }
     }
 }
 rootProject.name = "AndroidGameDevelopment"
