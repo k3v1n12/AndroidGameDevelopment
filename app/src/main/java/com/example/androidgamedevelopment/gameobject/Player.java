@@ -30,6 +30,7 @@ public class Player extends Circle{
     private int healthPoints = MAX_HEALTH_POINTS;
     private Animator animator;
     private PlayerState playerState;
+    private double speed;
 
     public Player(Context context, Game game, double positionX, double positionY, double radius, Animator animator)  {
         super(context, ContextCompat.getColor(context, R.color.player), positionX, positionY, radius);
@@ -37,17 +38,17 @@ public class Player extends Circle{
         this.healthBar = new HealthBar(context, this);
         this.animator = animator;
         this.playerState = new PlayerState(this);
+        speed = MAX_SPEED;
     }
     @Override
     public void update() {
         //update velocity based on teh actuator of the joystick
-        velocityX = game.getJoyStickActuatorX() * MAX_SPEED;
-        velocityY = game.getJoyStickActuatorY() * MAX_SPEED;
+        velocityX = game.getJoyStickActuatorX() * speed;
+        velocityY = game.getJoyStickActuatorY() * speed;
 
         //update the position
         positionX += velocityX;
         positionY += velocityY;
-
         // Update direction
         if (velocityX != 0 || velocityY != 0) {
             // Normalize velocity to get direction (unit vector of velocity)
@@ -81,5 +82,13 @@ public class Player extends Circle{
 
     public PlayerState getPlayerState() {
         return playerState;
+    }
+
+    public void setSpeed(boolean b) {
+        if(true) {
+            speed = MAX_SPEED / 2;
+        } else {
+            speed = MAX_SPEED;
+        }
     }
 }

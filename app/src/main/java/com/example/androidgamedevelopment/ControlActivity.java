@@ -18,7 +18,7 @@ public class ControlActivity  extends BasePluginActivity {
     private Control control;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d("MainActivity.java", "onCreate()");
+        Log.d("ControlActivity.java", "onCreate()");
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 

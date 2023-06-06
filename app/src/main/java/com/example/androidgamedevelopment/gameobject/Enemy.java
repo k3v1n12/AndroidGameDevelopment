@@ -1,11 +1,14 @@
 package com.example.androidgamedevelopment.gameobject;
 
 import android.content.Context;
+import android.graphics.Canvas;
 
 import androidx.core.content.ContextCompat;
 
+import com.example.androidgamedevelopment.GameDisplay;
 import com.example.androidgamedevelopment.GameLoop;
 import com.example.androidgamedevelopment.R;
+import com.example.androidgamedevelopment.graphics.Sprite;
 
 public class Enemy extends Circle{
     private static final double SPEED_PIXEL_PER_SECOND = Player.SPEED_PIXEL_PER_SECOND * .6;
@@ -16,11 +19,6 @@ public class Enemy extends Circle{
     private static double updatesUntilNextSpawn = UPDATES_PER_SPAWN;
     private final Player player;
 
-    public Enemy(Context context,Player player, double positionX, double positionY, double radius) {
-        super(context, ContextCompat.getColor(context, R.color.enemy), positionX, positionY, radius);
-
-        this.player = player;
-    }
 
     public Enemy(Context context, Player player) {
         super(context, ContextCompat.getColor(context, R.color.enemy),
@@ -66,6 +64,7 @@ public class Enemy extends Circle{
             velocityX = 0;
             velocityY = 0;
         }
+
 
         positionX += velocityX;
         positionY += velocityY;

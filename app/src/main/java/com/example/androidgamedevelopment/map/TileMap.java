@@ -17,16 +17,16 @@ public class TileMap {
     private Tile[][] tilemap;
     private SpriteSheet spriteSheet;
     private Bitmap mapBitmap;
-
+    int[][] layout;
     public TileMap(SpriteSheet spriteSheet) {
         mapLayout = new MapLayout();
         this.spriteSheet = spriteSheet;
+        layout = mapLayout.getLayout();
         initializeTilemap();
     }
 
 
     private void initializeTilemap() {
-        int[][] layout = mapLayout.getLayout();
         tilemap = new Tile[NUMBER_OF_ROW_TILES][NUMBER_OF_COLUMN_TILES];
         for (int iRow = 0; iRow < NUMBER_OF_ROW_TILES; iRow++) {
             for (int iCol = 0; iCol < NUMBER_OF_COLUMN_TILES; iCol++) {
@@ -60,6 +60,9 @@ public class TileMap {
                 (idxCol + 1)*TILE_WIDTH_PIXELS,
                 (idxRow + 1)*TILE_HEIGHT_PIXELS
         );
+    }
+    public int getLayoutType(int idxRow, int idxCol) {
+        return layout[idxRow][idxCol];
     }
     public void draw(Canvas canvas, GameDisplay gameDisplay) {
         canvas.drawBitmap(

@@ -24,6 +24,7 @@ import com.example.androidgamedevelopment.graphics.Animator;
 import com.example.androidgamedevelopment.graphics.Sprite;
 import com.example.androidgamedevelopment.graphics.SpriteSheet;
 import com.example.androidgamedevelopment.map.TileMap;
+import com.example.androidgamedevelopment.map.TileType;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -49,6 +50,8 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
     private double actuatorX = 0.0;
     private double actuatorY = 0.0;
     private MainActivity context;
+    private int tileX;
+    private int tileY;
 
     public Game(Context context) {
         super(context);
@@ -133,6 +136,21 @@ public class Game extends SurfaceView implements SurfaceHolder.Callback {
         }
 
         player.update();
+        tileX = (int)(player.getPositionX() / 64);
+        tileY = (int)(player.getPositionY() / 64);
+        int type =  tilemap.getLayoutType(tileX, tileY);
+        switch(TileType.values()[type]) {
+            case WATER_TILE:
+                player.setSpeed(true);
+                break;
+            case LAVA_TILE:
+                player.setHealthPoint(player.getHealthPoint() - 1);
+                player.setSpeed(false);
+                break;
+            default:
+                player.setSpeed(false);
+                break;
+        }
         BroadcastMessage spellMessage = new BroadcastMessage(MessageType.JOYSTICK_UPDATE, null);
         context.sendMessage(spellMessage);
         if(Enemy.isReadySpawn()) {

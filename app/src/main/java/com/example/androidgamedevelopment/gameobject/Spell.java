@@ -1,11 +1,14 @@
 package com.example.androidgamedevelopment.gameobject;
 
 import android.content.Context;
+import android.graphics.Canvas;
 
 import androidx.core.content.ContextCompat;
 
+import com.example.androidgamedevelopment.GameDisplay;
 import com.example.androidgamedevelopment.GameLoop;
 import com.example.androidgamedevelopment.R;
+import com.example.androidgamedevelopment.graphics.Sprite;
 
 public class Spell extends Circle {
     public static final double SPEED_PIXELS_PER_SECOND = 800.0;
@@ -28,4 +31,5 @@ public class Spell extends Circle {
         positionX = positionX + velocityX;
         positionY = positionY + velocityY;
     }
+
 }
